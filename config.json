@@ -1,0 +1,12 @@
+{
+    "Token": "REDACTED",
+    "report_channel_id": "REDACTED",
+    "ticket_category_id": "REDACTED",
+    "ticket_role_id": "REDACTED",
+    "transcript_channel_id": "REDACTED",
+    "dev_ids": ["REDACTED"],
+    "guild_owner_id": "REDACTED",
+    "staff_role_id": "REDACTED",
+    "leave_msg": "This staff member is currently on leave. Please expect delayed responses.",
+    "on_leave_role_id": "REDACTED"
+}
