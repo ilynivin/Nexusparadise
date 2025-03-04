@@ -29,7 +29,11 @@ class Ticket(commands.Cog):
                 if self.ticket_category_id:
                     self.ticket_category_id = int(self.ticket_category_id)
                 if self.ticket_role_id:
-                    self.ticket_role_id = int(self.ticket_role_id)
+                    # Handle ticket_role_id as a list or single ID
+                    if isinstance(self.ticket_role_id, list):
+                        self.ticket_role_id = [int(role_id) for role_id in self.ticket_role_id]
+                    else:
+                        self.ticket_role_id = int(self.ticket_role_id)
                 if self.transcript_channel_id:
                     self.transcript_channel_id = int(self.transcript_channel_id)
                 if self.guild_owner_id:
@@ -85,9 +89,16 @@ class TicketButtonView(discord.ui.View):
             }
 
             if self.role_id:
-                role = interaction.guild.get_role(self.role_id)
-                if role:
-                    overwrites[role] = discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_messages=True)
+                # Handle self.role_id as a list or single ID
+                if isinstance(self.role_id, list):
+                    for role_id in self.role_id:
+                        role = interaction.guild.get_role(role_id)
+                        if role:
+                            overwrites[role] = discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_messages=True)
+                else:
+                    role = interaction.guild.get_role(self.role_id)
+                    if role:
+                        overwrites[role] = discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_messages=True)
 
             channel = await category.create_text_channel(name=f"ticket-{interaction.user.name}", overwrites=overwrites)
             await interaction.followup.send(f"Your ticket has been created: {channel.mention}", ephemeral=True)  # Send the real message.
@@ -95,7 +106,14 @@ class TicketButtonView(discord.ui.View):
             embed = discord.Embed(title="Support Ticket", description=f"Welcome to your support ticket, {interaction.user.mention}!\nPlease describe your issue.", color=discord.Color.blue())
             await channel.send(embed=embed)
             if self.role_id:
-                await channel.send(f"Support team: {role.mention}")
+                # Handle self.role_id as a list or single ID
+                if isinstance(self.role_id, list):
+                    role = interaction.guild.get_role(self.role_id[0]) # Get the first role for pinging.
+                else:
+                    role = interaction.guild.get_role(self.role_id)
+
+                if role:
+                    await channel.send(f"Support team: {role.mention}")
             await channel.send(view=TicketCloseButtonView(self.bot, self.bot.get_cog("Ticket").transcript_channel_id, timeout=None))  # Added timeout=None.
 
         except discord.Forbidden:
@@ -134,6 +152,4 @@ class TicketCloseButtonView(discord.ui.View):
             if e.code == 10003:  # Unknown channel
                 logging.warning(f"Attempted to send message to deleted channel: {channel.id}")
             else:
-                await interaction.followup.send(f"An error occurred: {e}", ephemeral=True)
-        except Exception as e:
-            await interaction.followup.send(f"An error occurred: {e}", ephemeral=True)
+                await interaction.followup.send(f"An error occurred: {e}",ephemeral=True)
